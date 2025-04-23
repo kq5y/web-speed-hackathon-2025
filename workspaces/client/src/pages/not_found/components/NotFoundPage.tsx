@@ -19,7 +19,7 @@ export const NotFoundPage = () => {
         <section className="mb-[32px] flex w-full flex-col items-center justify-center gap-y-[20px]">
           <h1 className="text-[32px] font-bold text-[#ffffff]">ページが見つかりませんでした</h1>
           <p>あなたが見ようとしたページは、残念ながら見つけられませんでした。</p>
-          <img alt="" width={640} height={360} src="/public/animations/001.gif" />
+          <video alt="" width={640} height={360} src="/public/animations/001.webm" autoplay loop muted playsinline />
         </section>
         <section>{modules[0] && <RecommendedSection module={modules[0]} eager={true} />}</section>
       </div>
