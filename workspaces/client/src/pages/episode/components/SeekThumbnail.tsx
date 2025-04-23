@@ -6,6 +6,7 @@ import { usePointer } from '@wsh-2025/client/src/features/layout/hooks/usePointe
 import { useDuration } from '@wsh-2025/client/src/pages/episode/hooks/useDuration';
 
 const SEEK_THUMBNAIL_WIDTH = 160;
+const MIN_LEFT = SEEK_THUMBNAIL_WIDTH / 2;
 
 interface Props {
   episode: StandardSchemaV1.InferOutput<typeof schema.getEpisodeByIdResponse>;
@@ -13,18 +14,31 @@ interface Props {
 
 export const SeekThumbnail = ({ episode }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
-  const pointer = usePointer();
   const duration = useDuration();
+  const [relativeX, setRelativeX] = useState(0);
+  const [pointedTime, setPointedTime] = useState(0);
+  const [maxLeft, setMaxLeft] = useState(0);
 
-  const elementRect = ref.current?.parentElement?.getBoundingClientRect() ?? { left: 0, width: 0 };
-  const relativeX = pointer.x - elementRect.left;
+  useEffect(() => {
+    const parent = ref.current?.parentElement;
+    if (!parent) return;
 
-  const percentage = Math.max(0, Math.min(relativeX / elementRect.width, 1));
-  const pointedTime = duration * percentage;
+    const handleMouseOver = (event) => {
+      const elementRect = parent.getBoundingClientRect();
+      const pointerX = event.clientX;
 
-  // サムネイルが画面からはみ出ないようにサムネイル中央を基準として left を計算する
-  const MIN_LEFT = SEEK_THUMBNAIL_WIDTH / 2;
-  const MAX_LEFT = elementRect.width - SEEK_THUMBNAIL_WIDTH / 2;
+      setRelativeX(pointerX - elementRect.left);
+      setMaxLeft(elementRect.width - SEEK_THUMBNAIL_WIDTH / 2);
+
+      const percentage = Math.max(0, Math.min(relativeX / elementRect.width, 1));
+      setPointedTime(duration * percentage);
+    };
+
+    parent.addEventListener('mouseover', handleMouseOver);
+    return () => {
+      parent.removeEventListener('mouseover', handleMouseOver);
+    };
+  }, [])
 
   return (
     <div
@@ -32,7 +46,7 @@ export const SeekThumbnail = ({ episode }: Props) => {
       className="absolute h-[90px] w-[160px] bg-[size:auto_100%] bottom-0 translate-x-[-50%]"
       style={{
         backgroundPositionX: -1 * SEEK_THUMBNAIL_WIDTH * Math.floor(pointedTime),
-        left: Math.max(MIN_LEFT, Math.min(relativeX, MAX_LEFT)),
+        left: Math.max(MIN_LEFT, Math.min(relativeX, maxLeft)),
         backgroundImage: `url(/public/previews/${episode.streamId}.jpeg)`,
       }}
     />
