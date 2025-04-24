@@ -14,6 +14,11 @@ async function main() {
 
   const app = fastify();
 
+  app.addHook('onSend', async (_req, reply) => {
+    if (!_req.url?.startsWith('/api')) {
+      reply.header('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  });
   app.register(cors, {
     origin: true,
   });
